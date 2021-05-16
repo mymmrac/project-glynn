@@ -16,3 +16,6 @@
 
 # IDEA files
 .idea
+
+# Cassandra data
+cassandra-data
