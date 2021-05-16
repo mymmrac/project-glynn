@@ -1,12 +1,13 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/alecthomas/kong"
 	"github.com/mymmrac/project-glynn/pkg/repository"
 	"github.com/mymmrac/project-glynn/pkg/server"
 	"github.com/mymmrac/project-glynn/pkg/server/httpapi"
 	"github.com/sirupsen/logrus"
-	"net/http"
 )
 
 var cli struct {

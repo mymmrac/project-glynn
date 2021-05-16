@@ -1,12 +1,13 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/gocql/gocql"
 	"github.com/google/uuid"
 	"github.com/mymmrac/project-glynn/pkg/data/message"
 	"github.com/mymmrac/project-glynn/pkg/data/user"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 const (

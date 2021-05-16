@@ -10,25 +10,35 @@ For simplicity as "chat room" will be used just "room".
 
 * [ ] Configs:
   * [ ] 🕒 Read configs
-  * [ ] Parse CLI args
-* [ ] Types:
-  * [ ] User, Message, Room
-  * [ ] Data repository
-  * [ ] Server
+  * [X] Parse CLI args
+* [X] Types:
+  * [X] User, Message, Room
+  * [X] Data repository
+  * [X] Service
 * [ ] Docker:
   * [ ] App build container
   * [ ] App run container
-  * [ ] Cassandra container
-* [ ] Cassandra:
-  * [ ] Connect to Cassandra
-  * [ ] Init Cassandra's keyspace & tables
+  * [X] Cassandra container
+* [X] Cassandra:
+  * [X] Connect to Cassandra
+  * [X] Init Cassandra's keyspace & tables
 * [ ] Basic info:
   * [ ] Start server (display initial server info)
   * [ ] Logging
   * [ ] Swagger UI
+* [ ] Service:
+  * [X] Get messages
+  * [X] Send message
+  * [ ] Create room
+  * [ ] Delete room
+  * [ ] Validate room
+  * [ ] Validate user
+  * [ ] Validate message
+  * [ ] Get info
 * [ ] Server (HTTP):
   * [ ] Handle if user is new
-  * [ ] Handle new messages from users
+  * [X] Handle get messages
+  * [X] Handle new messages
   * [ ] Handle room creation
   * [ ] Handle room deletion
   * [ ] Handle admin authentication middleware    

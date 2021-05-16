@@ -28,126 +28,68 @@ tags:
   - name: admins
     description: Secured admin-only calls which requiers admin token
 security:
-  - {}
-  - adminToken: []
+  - { }
+  - adminToken: [ ]
 paths:
-  # /rooms/{roomToken}/connections:
-  #   get:
-  #     summary: Room info
-  #     tags: [users]
-  #     security:
-  #       - {}
-  #     parameters:
-  #     - $ref: '#/components/parameters/RoomToken'
-  #     responses:
-  #       '200':
-  #         description: Number of users and messages
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 onlineUsers:
-  #                   type: integer
-  #                   example: 4
-  #                 messageCount:
-  #                   type: integer
-  #                   example: 24
-  #       '404':
-  #         $ref: '#/components/responses/RoomNotFound'
-  #   post:
-  #     summary: Connect to room
-  #     tags: [users]
-  #     security:
-  #       - {}
-  #     parameters:
-  #     - $ref: '#/components/parameters/RoomToken'
-  #     requestBody:
-  #       content:
-  #         application/json:
-  #           schema:
-  #             $ref: '#/components/schemas/User'
-  #     responses:
-  #       '201':
-  #         description: Connected to room
-  #       '400':
-  #         description: Bad user data
-  #       '403':
-  #         description: Username already taken in this room or user with same id already connected
-  #       '404':
-  #         $ref: '#/components/responses/RoomNotFound'
-  #   patch:
-  #     summary: Update connection status
-  #     tags: [users]
-  #     security:
-  #       - {}
-  #     parameters:
-  #     - $ref: '#/components/parameters/RoomToken'
-  #     requestBody:
-  #       content:
-  #         application/json:
-  #           schema:
-  #             $ref: '#/components/schemas/UserID'
-  #     responses:
-  #       '202':
-  #         description: Updated
-  #       '403':
-  #         $ref: '#/components/responses/UserNotConnected'
-  #       '404':
-  #         $ref: '#/components/responses/RoomNotFound'
-  /rooms/{roomToken}/messages/{userID}:
+  /rooms/{roomID}/messages:
     get:
       summary: Get new messages
-      tags: [users]
+      tags: [ users ]
       security:
-        - {}
+        - { }
       parameters:
-        - $ref: '#/components/parameters/RoomToken'
-        - $ref: '#/components/parameters/UserID'
+        - $ref: '#/components/parameters/RoomID'
         - in: query
           name: lastMessageID
           required: false
           schema:
-            $ref: '#/components/schemas/ID'
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Array of new messages
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Message'
-        '403':
-          $ref: '#/components/responses/UserNotConnected'
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+                  usernames:
+                    type: object
+                    additionalProperties:
+                      type: string
         '404':
-          $ref: '#/components/responses/UserOrRoomNotFound'
+          $ref: '#/components/responses/RoomNotFound'
     post:
       summary: Send new message
-      tags: [users]
+      tags: [ users ]
       security:
-        - {}
+        - { }
       parameters:
-        - $ref: '#/components/parameters/RoomToken'
-        - $ref: '#/components/parameters/UserID'
+        - $ref: '#/components/parameters/RoomID'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MessageText'
+              type: object
+              properties:
+                text:
+                  $ref: '#/components/schemas/MessageText'
+                userID:
+                  $ref: '#/components/schemas/UUID'
       responses:
         '201':
           description: Sent
         '400':
           description: Bad message data
-        '403':
-          $ref: '#/components/responses/UserNotConnected'
         '404':
-          $ref: '#/components/responses/UserOrRoomNotFound'
+          $ref: '#/components/responses/RoomNotFound'
   /rooms:
     get:
       summary: List of rooms
-      tags: [admins]
+      tags: [ admins ]
       responses:
         '200':
           description: Array of new messages
@@ -161,22 +103,22 @@ paths:
           $ref: '#/components/responses/Unauthorized'
     post:
       summary: Create new room
-      tags: [admins]
+      tags: [ admins ]
       responses:
         '201':
-          description: Token of new room
+          description: ID of new room
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UUID'
         '403':
           $ref: '#/components/responses/Unauthorized'
-  /rooms/{roomToken}:
+  /rooms/{roomID}:
     delete:
       summary: Delete room
-      tags: [admins]
+      tags: [ admins ]
       parameters:
-        - $ref: '#/components/parameters/RoomToken'
+        - $ref: '#/components/parameters/RoomID'
       responses:
         '200':
           description: Deleted
@@ -186,25 +128,15 @@ paths:
           $ref: '#/components/responses/RoomNotFound'
 components:
   parameters:
-    RoomToken:
+    RoomID:
       in: path
-      name: roomToken
-      required: true
-      schema:
-        $ref: '#/components/schemas/UUID'
-    UserID:
-      in: path
-      name: userID
+      name: roomID
       required: true
       schema:
         $ref: '#/components/schemas/UUID'
   responses:
     RoomNotFound:
       description: No such room
-    UserOrRoomNotFound:
-      description: No such room or user
-    UserNotConnected:
-      description: User isn't connected to room
     Unauthorized:
       description: Unauthorized request
   securitySchemes:
@@ -216,20 +148,6 @@ components:
     UUID:
       type: string
       example: "123e4567-e89b-12d3-a456-426614174000"
-    ID:
-      type: integer
-      format: int64
-      example: 5313117
-    Username:
-      type: string
-      example: "Test"
-    # User:
-    #   type: object
-    #   properties:
-    #     id:
-    #       $ref: '#/components/schemas/UserID'
-    #     username:
-    #       $ref: '#/components/schemas/Username'
     MessageText:
       type: string
       example: "Test message"
@@ -237,9 +155,11 @@ components:
       type: object
       properties:
         id:
-          $ref: '#/components/schemas/ID'
-        username:
-          $ref: '#/components/schemas/Username'
+          $ref: '#/components/schemas/UUID'
+        roomID:
+          $ref: '#/components/schemas/UUID'
+        userID:
+          $ref: '#/components/schemas/UUID'
         text:
           $ref: '#/components/schemas/MessageText'
         time:

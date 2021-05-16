@@ -6,6 +6,7 @@ require (
 	github.com/alecthomas/kong v0.2.16
 	github.com/gocql/gocql v0.0.0-20210515062232-b7ef815b4556
 	github.com/google/uuid v1.2.0
+	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect

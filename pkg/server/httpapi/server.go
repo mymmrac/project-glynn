@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/mymmrac/project-glynn/pkg/data/message"
 	"github.com/mymmrac/project-glynn/pkg/server"
@@ -28,13 +29,16 @@ func NewServer(service *server.Service, log *logrus.Logger) *Server {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.router.ServeHTTP(w, r)
+	origins := handlers.AllowedOrigins([]string{"*"})
+	methods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
+
+	handlers.CORS(origins, methods)(&s.router).ServeHTTP(w, r)
 }
 
 func (s *Server) getMessages() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		roomID := uuid.MustParse(vars["roomToken"])
+		roomID := uuid.MustParse(vars["roomID"])
 
 		var (
 			messages  []message.Message
@@ -85,7 +89,7 @@ func (s *Server) getMessages() http.HandlerFunc {
 func (s *Server) sendMassage() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		roomID := uuid.MustParse(vars["roomToken"])
+		roomID := uuid.MustParse(vars["roomID"])
 
 		messageData := struct {
 			UserID uuid.UUID `json:"userID"`

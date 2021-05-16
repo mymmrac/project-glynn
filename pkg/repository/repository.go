@@ -1,10 +1,11 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/mymmrac/project-glynn/pkg/data/message"
 	"github.com/mymmrac/project-glynn/pkg/data/user"
-	"time"
 )
 
 type Repository interface {

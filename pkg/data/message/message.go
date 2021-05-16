@@ -8,11 +8,11 @@ import (
 )
 
 type Message struct {
-	ID     uuid.UUID `json:"id,omitempty"`
+	ID     uuid.UUID `json:"id"`
 	UserID uuid.UUID `json:"userID"`
 	RoomID uuid.UUID `json:"roomID"`
 	Text   string    `json:"text"`
-	Time   time.Time `json:"time,omitempty"`
+	Time   time.Time `json:"time"`
 }
 
 func (m *Message) String() string {

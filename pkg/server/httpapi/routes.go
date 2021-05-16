@@ -7,10 +7,10 @@ const uuidRegx = "\\b[0-9a-f]{8}\\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\\b[0-9a
 func (s *Server) routes() {
 	api := s.router.PathPrefix("/api/rooms").Subrouter()
 
-	api.HandleFunc("/{roomToken:"+uuidRegx+"}/messages", s.getMessages()).
+	api.HandleFunc("/{roomID:"+uuidRegx+"}/messages", s.getMessages()).
 		Methods(http.MethodGet)
-	api.HandleFunc("/{roomToken:"+uuidRegx+"}/messages", s.getMessages()).
+	api.HandleFunc("/{roomID:"+uuidRegx+"}/messages", s.getMessages()).
 		Queries("lastMessageID", "{lastMessageID:"+uuidRegx+"}").Methods(http.MethodGet)
-	api.HandleFunc("/{roomToken:"+uuidRegx+"}/messages", s.sendMassage()).
+	api.HandleFunc("/{roomID:"+uuidRegx+"}/messages", s.sendMassage()).
 		Methods(http.MethodPost)
 }
