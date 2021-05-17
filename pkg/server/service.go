@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/mymmrac/project-glynn/pkg/data/message"
@@ -25,47 +26,39 @@ type ChatNewMessage struct {
 }
 
 type Service struct {
-	repository repository.Repository
-	log        *logrus.Logger
+	messageRepo repository.MessageRepository
+	userRepo    repository.UserRepository
+	roomRepo    repository.RoomRepository
+	log         *logrus.Logger
 }
 
 func NewService(repo repository.Repository, log *logrus.Logger) *Service {
 	return &Service{
-		repository: repo,
-		log:        log,
+		messageRepo: repo,
+		userRepo:    repo,
+		roomRepo:    repo,
+		log:         log,
 	}
 }
 
 func (s *Service) GetMessagesAfterTime(roomID uuid.UUID, afterTime time.Time) (*ChatMessages, error) {
 	if err := s.CheckRoom(roomID); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("messages after time: %w", err)
 	}
 
-	messages, err := s.repository.GetMessages(roomID, afterTime, MessageLimit)
+	messages, err := s.messageRepo.GetMessages(roomID, afterTime, MessageLimit)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("messages after time: %w", err)
 	}
 
 	if messages == nil {
 		messages = make([]message.Message, 0)
 	}
 
-	// TODO move to own func
-	idsMap := make(map[uuid.UUID]struct{})
-	for _, msg := range messages {
-		idsMap[msg.UserID] = struct{}{}
-	}
-
-	ids := make([]uuid.UUID, len(idsMap))
-	i := 0
-	for id := range idsMap {
-		ids[i] = id
-		i++
-	}
-
-	users, err := s.repository.GetUsersFromIDs(ids)
+	ids := s.getUserIDsFromMessages(messages)
+	users, err := s.userRepo.GetUsersFromIDs(ids)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("messages after time: %w", err)
 	}
 
 	usernames := make(map[uuid.UUID]string)
@@ -79,25 +72,49 @@ func (s *Service) GetMessagesAfterTime(roomID uuid.UUID, afterTime time.Time) (*
 	}, nil
 }
 
-func (s *Service) GetMessagesAfterMessage(roomID, lastMessageID uuid.UUID) (*ChatMessages, error) {
-	msgTime, err := s.repository.GetMessageTime(lastMessageID)
-	if err != nil {
-		return nil, err
+func (s Service) getUserIDsFromMessages(messages []message.Message) []uuid.UUID {
+	idsMap := make(map[uuid.UUID]struct{})
+	for _, msg := range messages {
+		idsMap[msg.UserID] = struct{}{}
 	}
 
-	return s.GetMessagesAfterTime(roomID, msgTime)
+	ids := make([]uuid.UUID, len(idsMap))
+	i := 0
+	for id := range idsMap {
+		ids[i] = id
+		i++
+	}
+
+	return ids
+}
+
+func (s *Service) GetMessagesAfterMessage(roomID, lastMessageID uuid.UUID) (*ChatMessages, error) {
+	msgTime, err := s.messageRepo.GetMessageTime(lastMessageID)
+	if err != nil {
+		return nil, fmt.Errorf("messages after message: %w", err)
+	}
+
+	cm, err := s.GetMessagesAfterTime(roomID, msgTime)
+	if err != nil {
+		return nil, fmt.Errorf("messages after message: %w", err)
+	}
+	return cm, nil
 }
 
 func (s *Service) GetMessagesLatest(roomID uuid.UUID) (*ChatMessages, error) {
-	return s.GetMessagesAfterTime(roomID, time.Time{})
+	cm, err := s.GetMessagesAfterTime(roomID, time.Time{})
+	if err != nil {
+		return nil, fmt.Errorf("latest messages: %w", err)
+	}
+	return cm, nil
 }
 
 func (s *Service) SendMessage(roomID uuid.UUID, newMessage ChatNewMessage) error {
 	if err := s.CheckRoom(roomID); err != nil {
-		return err
+		return fmt.Errorf("send message: %w", err)
 	}
 	// TODO user check
-	// TODO test check
+	// TODO text check
 
 	msg := &message.Message{
 		ID:     uuid.New(),
@@ -107,16 +124,19 @@ func (s *Service) SendMessage(roomID uuid.UUID, newMessage ChatNewMessage) error
 		Time:   time.Now(),
 	}
 
-	return s.repository.SaveMessage(msg)
+	if err := s.messageRepo.SaveMessage(msg); err != nil {
+		return fmt.Errorf("send message: %w", err)
+	}
+	return nil
 }
 
 func (s *Service) CheckRoom(roomID uuid.UUID) error {
-	ok, err := s.repository.IsRoomExist(roomID)
+	ok, err := s.roomRepo.IsRoomExist(roomID)
 	if err != nil {
-		return err
+		return fmt.Errorf("check room: %w", err)
 	}
 	if !ok {
-		return ErrorRoomNotFound
+		return fmt.Errorf("check room: %w", ErrorRoomNotFound)
 	}
 	return nil
 }

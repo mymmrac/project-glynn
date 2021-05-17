@@ -3,6 +3,7 @@ package httpapi
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -11,11 +12,15 @@ func respondJSON(w http.ResponseWriter, data interface{}, statusCode int) error 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(statusCode)
 
-	if data != nil {
-		return json.NewEncoder(w).Encode(data)
+	if data == nil {
+		return errors.New("can't respond with nil data")
 	}
 
-	return errors.New("can't respond with nil data")
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		return fmt.Errorf("json encode: %w", err)
+	}
+
+	return nil
 }
 
 // respondJSONError responds with error message and specified HTTP status

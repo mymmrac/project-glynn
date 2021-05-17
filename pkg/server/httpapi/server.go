@@ -39,7 +39,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handlers.CORS(origins, methods)(&s.router).ServeHTTP(w, r)
 }
 
-// TODO refactor
 func (s *Server) routes() {
 	api := s.router.PathPrefix("/api").Subrouter()
 	roomMessagesAPI := api.PathPrefix(fmt.Sprintf("/rooms/{%s:%s}/messages", roomIDParameter, uuid.Regex)).Subrouter()
