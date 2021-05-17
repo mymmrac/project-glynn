@@ -2,15 +2,19 @@ package httpapi
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
-	"regexp"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/mymmrac/project-glynn/pkg/data/message"
 	"github.com/mymmrac/project-glynn/pkg/server"
+	"github.com/mymmrac/project-glynn/pkg/uuid"
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	roomIDParameter        = "roomID"
+	lastMessageIDParameter = "lastMessageID"
 )
 
 type Server struct {
@@ -35,30 +39,54 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handlers.CORS(origins, methods)(&s.router).ServeHTTP(w, r)
 }
 
+// TODO refactor
+func (s *Server) routes() {
+	api := s.router.PathPrefix("/api").Subrouter()
+	roomMessagesAPI := api.PathPrefix(fmt.Sprintf("/rooms/{%s:%s}/messages", roomIDParameter, uuid.Regex)).Subrouter()
+
+	roomMessagesAPI.HandleFunc("", s.getMessages()).
+		Methods(http.MethodGet)
+	roomMessagesAPI.HandleFunc("", s.getMessages()).
+		Queries(lastMessageIDParameter, fmt.Sprintf("{%s:%s}", lastMessageIDParameter, uuid.Regex)).
+		Methods(http.MethodGet)
+	roomMessagesAPI.HandleFunc("", s.sendMassage()).
+		Methods(http.MethodPost)
+}
+
 func (s *Server) getMessages() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		roomID := uuid.MustParse(vars["roomID"])
 
-		var (
-			messages  []message.Message
-			usernames map[uuid.UUID]string
-			err       error
-		)
-
-		lastMessageIDStr := r.URL.Query().Get("lastMessageID")
-		ok, err := regexp.MatchString(uuidRegx, lastMessageIDStr)
+		// TODO move to func
+		roomIDStr, ok := vars[roomIDParameter]
+		if !ok {
+			s.log.Error("roomID is required")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		roomID, err := uuid.Parse(roomIDStr)
 		if err != nil {
-			s.log.Error(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			s.log.Error("invalid roomID: ", err)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		if ok {
-			lastMessageID := uuid.MustParse(lastMessageIDStr)
-			messages, usernames, err = s.service.GetMessagesAfterMessage(roomID, lastMessageID)
+		var messages *server.ChatMessages
+
+		lastMessageIDStr := r.URL.Query().Get(lastMessageIDParameter)
+		if lastMessageIDStr == "" {
+			messages, err = s.service.GetMessagesLatest(roomID)
 		} else {
-			messages, usernames, err = s.service.GetMessagesLatest(roomID)
+			var lastMessageID uuid.UUID
+			if lastMessageID, err = uuid.Parse(lastMessageIDStr); err != nil {
+				if err = respondJSONError(w, err, http.StatusBadRequest); err != nil {
+					s.log.Error(err)
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+				return
+			}
+
+			messages, err = s.service.GetMessagesAfterMessage(roomID, lastMessageID)
 		}
 
 		if err != nil {
@@ -75,10 +103,7 @@ func (s *Server) getMessages() http.HandlerFunc {
 			return
 		}
 
-		err = respondJSON(w, struct {
-			Messages  []message.Message    `json:"messages"`
-			Usernames map[uuid.UUID]string `json:"usernames"`
-		}{messages, usernames}, http.StatusOK)
+		err = respondJSON(w, messages, http.StatusOK)
 		if err != nil {
 			s.log.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -89,13 +114,23 @@ func (s *Server) getMessages() http.HandlerFunc {
 func (s *Server) sendMassage() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		roomID := uuid.MustParse(vars["roomID"])
 
-		messageData := struct {
-			UserID uuid.UUID `json:"userID"`
-			Text   string    `json:"text"`
-		}{}
-		err := decodeJSON(r, &messageData)
+		// TODO move to func
+		roomIDStr, ok := vars[roomIDParameter]
+		if !ok {
+			s.log.Error("roomID is required")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		roomID, err := uuid.Parse(roomIDStr)
+		if err != nil {
+			s.log.Error("invalid roomID: ", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		var newMessage server.ChatNewMessage
+		err = decodeJSON(r, &newMessage)
 		if err != nil {
 			err := respondJSONError(w, err, http.StatusBadRequest)
 			if err != nil {
@@ -105,7 +140,7 @@ func (s *Server) sendMassage() http.HandlerFunc {
 			return
 		}
 
-		err = s.service.SendMessage(roomID, messageData.UserID, messageData.Text)
+		err = s.service.SendMessage(roomID, newMessage)
 		if err != nil {
 			err := respondJSONError(w, err, http.StatusBadRequest)
 			if err != nil {

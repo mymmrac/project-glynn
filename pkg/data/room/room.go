@@ -1,7 +1,8 @@
 package room
 
-import "github.com/google/uuid"
+import "github.com/mymmrac/project-glynn/pkg/uuid"
 
+// TODO docs
 type Room struct {
 	ID uuid.UUID `json:"id"`
 }

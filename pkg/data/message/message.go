@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/mymmrac/project-glynn/pkg/uuid"
 )
 
+// TODO docs
 type Message struct {
 	ID     uuid.UUID `json:"id"`
 	UserID uuid.UUID `json:"userID"`

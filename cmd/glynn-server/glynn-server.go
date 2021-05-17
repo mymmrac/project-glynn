@@ -13,15 +13,21 @@ import (
 var cli struct {
 	Port string `kong:"default='8080',help='Server port'"`
 
+	// TODO move to env
 	CassandraURL  string `kong:"default='localhost',help='Cassandra URL'"`
-	CassandraUser string `kong:"default='',help='Cassandra URL'"`
-	CassandraPass string `kong:"default='',help='Cassandra URL'"`
+	CassandraUser string `kong:"default='',help='Cassandra User'"`
+	CassandraPass string `kong:"default='',help='Cassandra Pass'"`
 }
 
 func main() {
+	// TODO move to other files
+	// TODO move uuid to own package (type alias)
+	// TODO fmt.Errorf() wrap unwrap (in return) ! ERROR HANDLING
+
 	log := logrus.StandardLogger()
 	Formatter := new(logrus.TextFormatter)
 	Formatter.TimestampFormat = "02.01.2006 15:04:05"
+	// TODO use const
 	Formatter.FullTimestamp = true
 	log.SetFormatter(Formatter)
 	log.SetLevel(logrus.DebugLevel)
@@ -50,6 +56,8 @@ func main() {
 			log.Error("Failed to server: ", err)
 			return
 		}
+
+	//	TODO graceful shutdown
 	default:
 		log.Error("Unknown command: ", ctx.Command())
 		return
