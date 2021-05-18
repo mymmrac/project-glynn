@@ -3,3 +3,8 @@ lint-install:
 
 lint:
 	$(shell go env GOPATH)/bin/golangci-lint run
+
+test:
+	go test -coverprofile=coverprofile.out ./...
+
+validate: lint test

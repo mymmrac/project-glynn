@@ -1,7 +1,6 @@
 package message
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/mymmrac/project-glynn/pkg/uuid"
@@ -14,8 +13,4 @@ type Message struct {
 	RoomID uuid.UUID `json:"roomID"` // RoomID is an id of room in which message was sent
 	Text   string    `json:"text"`   // Text is actual text that user sent
 	Time   time.Time `json:"time"`   // Time when massage was sent
-}
-
-func (m *Message) String() string {
-	return fmt.Sprintf("Message %s: '%s', at: %s , from: %s, room: %s", m.ID, m.Text, m.Time, m.UserID, m.RoomID)
 }
