@@ -1,0 +1,168 @@
+openapi: 3.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/mymmrac/Project-Glynn/1.0.0
+  - url: http://{host}:{port}/{basePath}
+    description: Server API
+    variables:
+      host:
+        default: localhost
+      port:
+        default: '8080'
+      basePath:
+        default: api
+info:
+  description: Chat for communication in different chat rooms with any number of users.
+  version: "1.0.0"
+  title: Project Glynn
+  contact:
+    name: mymmrac
+    email: mymmrac@gmail.com
+  license:
+    name: MIT License
+    url: https://github.com/mymmrac/project-glynn/blob/main/LICENSE
+tags:
+  - name: users
+    description: Operations available to regular users
+  - name: admins
+    description: Secured admin-only calls which requiers admin token
+security:
+  - { }
+  - adminToken: [ ]
+paths:
+  /rooms/{roomID}/messages:
+    get:
+      summary: Get new messages
+      tags: [ users ]
+      security:
+        - { }
+      parameters:
+        - $ref: '#/components/parameters/RoomID'
+        - in: query
+          name: lastMessageID
+          required: false
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Array of new messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+                  usernames:
+                    type: object
+                    additionalProperties:
+                      type: string
+        '404':
+          $ref: '#/components/responses/RoomNotFound'
+    post:
+      summary: Send new message
+      tags: [ users ]
+      security:
+        - { }
+      parameters:
+        - $ref: '#/components/parameters/RoomID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  $ref: '#/components/schemas/MessageText'
+                userID:
+                  $ref: '#/components/schemas/UUID'
+      responses:
+        '201':
+          description: Sent
+        '400':
+          description: Bad message data
+        '404':
+          $ref: '#/components/responses/RoomNotFound'
+  /rooms:
+    get:
+      summary: List of rooms
+      tags: [ admins ]
+      responses:
+        '200':
+          description: Array of new messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UUID'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Create new room
+      tags: [ admins ]
+      responses:
+        '201':
+          description: ID of new room
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UUID'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+  /rooms/{roomID}:
+    delete:
+      summary: Delete room
+      tags: [ admins ]
+      parameters:
+        - $ref: '#/components/parameters/RoomID'
+      responses:
+        '200':
+          description: Deleted
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/RoomNotFound'
+components:
+  parameters:
+    RoomID:
+      in: path
+      name: roomID
+      required: true
+      schema:
+        $ref: '#/components/schemas/UUID'
+  responses:
+    RoomNotFound:
+      description: No such room
+    Unauthorized:
+      description: Unauthorized request
+  securitySchemes:
+    adminToken:
+      type: apiKey
+      name: AdminToken
+      in: header
+  schemas:
+    UUID:
+      type: string
+      example: "123e4567-e89b-12d3-a456-426614174000"
+    MessageText:
+      type: string
+      example: "Test message"
+    Message:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        roomID:
+          $ref: '#/components/schemas/UUID'
+        userID:
+          $ref: '#/components/schemas/UUID'
+        text:
+          $ref: '#/components/schemas/MessageText'
+        time:
+          type: string
+          format: date-time
+          example: "2006-01-02T15:04:05.000Z"

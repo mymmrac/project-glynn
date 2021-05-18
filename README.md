@@ -1,63 +1,74 @@
 # Project Glynn
 
-CLI chat with server & client for communication in different chat rooms with any number of users.
+CLI chats with a server & client for communication in different chat rooms with any number of users.
 
 For simplicity as "chat room" will be used just "room". 
+
+🕒 - delayed for an unknown amount of time
 
 ## Server
 
 * [ ] Configs:
-  * [ ] Read configs
-  * [ ] Parse CLI args
-* [ ] Types:
-  * [ ] User, Room, Connection, Message
-  * [ ] Data repository
-  * [ ] Server (HTTP & gRPC)
+  * [ ] 🕒 Read configs
+  * [X] Parse CLI args
+* [X] Types:
+  * [X] User, Message, Room
+  * [X] Data repository
+  * [X] Service
 * [ ] Docker:
   * [ ] App build container
   * [ ] App run container
-  * [ ] Cassandra container
-* [ ] Cassandra:
-  * [ ] Connect to Cassandra
-  * [ ] Init Cassandra's keyspace & tables
+  * [X] Cassandra container
+* [X] Cassandra:
+  * [X] Connect to Cassandra
+  * [X] Init Cassandra's keyspace & tables
 * [ ] Basic info:
   * [ ] Start server (display initial server info)
   * [ ] Logging
   * [ ] Swagger UI
-* [ ] HTTP:
-  * [ ] Handle admin authentication middleware
-  * [ ] Handle room creation
-  * [ ] Handle user connection to room
+* [ ] Service:
+  * [X] Get messages
+  * [X] Send message
+  * [ ] Create room
+  * [ ] Delete room
+  * [ ] Validate room
+  * [ ] Validate user
+  * [ ] Validate message
+  * [ ] Get info
+* [ ] Server (HTTP):
   * [ ] Handle if user is new
-  * [ ] Handle user connection status
-  * [ ] Handle user disconnection from room
-  * [ ] Handle new messages from users
-  * [ ] Handle user reconnection (send unreaded messages)
+  * [X] Handle get messages
+  * [X] Handle new messages
+  * [ ] Handle room creation
   * [ ] Handle room deletion
+  * [ ] Handle admin authentication middleware    
   * [ ] Handle server info
-* [ ] gRPC:
+  * [ ] 🕒 Handle user connection to room
+  * [ ] 🕒 Handle user disconnection from room
+  * [ ] 🕒 Handle user connection status
+* [ ] Server (gRPC):
   * [ ] *Future plans*
-* [ ] Encription
+* [ ] Encryption
   * [ ] *Future plans*
 
 ## Client
 
 * [ ] Configs:
-  * [ ] Read configs
+  * [ ] 🕒 Read configs
   * [ ] Parse CLI args
 * [ ] Types:
   * [ ] Service
-* [ ] HTTP:
-  * [ ] Create connection to room
+* [ ] Service (HTTP):
+  * [ ] User creation
   * [ ] Read messages
-  * [ ] Connection status (for server)
-  * [ ] Get unreaded messages
   * [ ] Format massages
   * [ ] Create room
   * [ ] Delete room
   * [ ] Server info
-* [ ] gRPC:
+  * [ ] 🕒 Connection status (for the server)
+  * [ ] 🕒 Create connection to room
+* [ ] Service (gRPC):
   * [ ] *Future plans*
-* [ ] Encription
+* [ ] Encryption
   * [ ] *Future plans*
 
