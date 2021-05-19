@@ -1,5 +1,11 @@
 # Project Glynn
 
+[![Go Status](https://github.com/mymmrac/project-glynn/actions/workflows/go.yml/badge.svg)](https://github.com/mymmrac/project-glynn/actions/workflows/go.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mymmrac_project-glynn&metric=alert_status)](https://sonarcloud.io/dashboard?id=mymmrac_project-glynn)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=mymmrac_project-glynn&metric=bugs)](https://sonarcloud.io/dashboard?id=mymmrac_project-glynn)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=mymmrac_project-glynn&metric=coverage)](https://sonarcloud.io/dashboard?id=mymmrac_project-glynn)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=mymmrac_project-glynn&metric=ncloc)](https://sonarcloud.io/dashboard?id=mymmrac_project-glynn)
+
 CLI chats with a server & client for communication in different chat rooms with any number of users.
 
 For simplicity as "chat room" will be used just "room". 
