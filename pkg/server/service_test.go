@@ -17,34 +17,17 @@ import (
 
 var errAny = errors.New("any error")
 
-func mockIsRoomExist(m *mocks.MockRepository, roomID gomock.Matcher, ok bool, err error) {
-	m.EXPECT().
-		IsRoomExist(roomID).
-		Return(ok, err).
-		Times(1)
-}
+func getMessagesData(afterTime time.Time) (
+	roomID uuid.UUID,
+	users []user.User,
+	ids []uuid.UUID,
+	usernames map[uuid.UUID]string,
+	messages []message.Message) {
+	roomID = uuid.New()
 
-func mockGetMessages(m *mocks.MockRepository,
-	roomID gomock.Matcher, afterTime gomock.Matcher, messages []message.Message, err error) {
-	m.EXPECT().
-		GetMessages(roomID, afterTime, gomock.Eq(MessageLimit)).
-		Return(messages, err).
-		Times(1)
-}
-
-func mockGetUsersFromIDs(m *mocks.MockRepository, ids gomock.Matcher, users []user.User, err error) {
-	m.EXPECT().
-		GetUsersFromIDs(ids).
-		Return(users, err).
-		Times(1)
-}
-
-func getMessagesData(afterTime time.Time) (uuid.UUID, []user.User, []uuid.UUID, map[uuid.UUID]string, []message.Message) {
-	roomID := uuid.New()
-
-	users := make([]user.User, 3)
-	ids := make([]uuid.UUID, len(users))
-	usernames := make(map[uuid.UUID]string)
+	users = make([]user.User, 3)
+	ids = make([]uuid.UUID, len(users))
+	usernames = make(map[uuid.UUID]string)
 	for i := range users {
 		users[i] = user.User{
 			ID:       uuid.New(),
@@ -54,7 +37,7 @@ func getMessagesData(afterTime time.Time) (uuid.UUID, []user.User, []uuid.UUID, 
 		usernames[users[i].ID] = users[i].Username
 	}
 
-	messages := make([]message.Message, 5)
+	messages = make([]message.Message, 5)
 	for i := range messages {
 		messages[i] = message.Message{
 			ID:     uuid.New(),
@@ -77,9 +60,9 @@ func TestService_GetMessagesAfterTime(t *testing.T) {
 	roomID, users, _, usernames, messages := getMessagesData(afterTime)
 
 	t.Run("ok", func(t *testing.T) {
-		mockIsRoomExist(m, gomock.Eq(roomID), true, nil)
-		mockGetMessages(m, gomock.Eq(roomID), gomock.Eq(afterTime), messages, nil)
-		mockGetUsersFromIDs(m, gomock.Any(), users, nil)
+		mocks.MockIsRoomExist(m, gomock.Eq(roomID), true, nil)
+		mocks.MockGetMessages(m, gomock.Eq(roomID), gomock.Eq(afterTime), gomock.Eq(MessageLimit), messages, nil)
+		mocks.MockGetUsersFromIDs(m, gomock.Any(), users, nil)
 
 		actual, err := service.GetMessagesAfterTime(roomID, afterTime)
 		assert.NoError(t, err)
@@ -92,7 +75,7 @@ func TestService_GetMessagesAfterTime(t *testing.T) {
 	})
 
 	t.Run("check room err", func(t *testing.T) {
-		mockIsRoomExist(m, gomock.Eq(roomID), false, nil)
+		mocks.MockIsRoomExist(m, gomock.Eq(roomID), false, nil)
 
 		actual, err := service.GetMessagesAfterTime(roomID, afterTime)
 		assert.Error(t, err)
@@ -100,8 +83,8 @@ func TestService_GetMessagesAfterTime(t *testing.T) {
 	})
 
 	t.Run("get messages err", func(t *testing.T) {
-		mockIsRoomExist(m, gomock.Eq(roomID), true, nil)
-		mockGetMessages(m, gomock.Eq(roomID), gomock.Eq(afterTime), nil, errAny)
+		mocks.MockIsRoomExist(m, gomock.Eq(roomID), true, nil)
+		mocks.MockGetMessages(m, gomock.Eq(roomID), gomock.Eq(afterTime), gomock.Eq(MessageLimit), nil, errAny)
 
 		actual, err := service.GetMessagesAfterTime(roomID, afterTime)
 		assert.Error(t, err)
@@ -109,9 +92,9 @@ func TestService_GetMessagesAfterTime(t *testing.T) {
 	})
 
 	t.Run("get usernames err", func(t *testing.T) {
-		mockIsRoomExist(m, gomock.Eq(roomID), true, nil)
-		mockGetMessages(m, gomock.Eq(roomID), gomock.Eq(afterTime), messages, nil)
-		mockGetUsersFromIDs(m, gomock.Any(), nil, errAny)
+		mocks.MockIsRoomExist(m, gomock.Eq(roomID), true, nil)
+		mocks.MockGetMessages(m, gomock.Eq(roomID), gomock.Eq(afterTime), gomock.Eq(MessageLimit), messages, nil)
+		mocks.MockGetUsersFromIDs(m, gomock.Any(), nil, errAny)
 
 		actual, err := service.GetMessagesAfterTime(roomID, afterTime)
 		assert.Error(t, err)
@@ -244,7 +227,7 @@ func TestService_getUsernamesFromUserIDs(t *testing.T) {
 					tt.expected[id] = tt.users[i].Username
 				}
 			}
-			mockGetUsersFromIDs(m, gomock.Eq(tt.args.ids), tt.users, err)
+			mocks.MockGetUsersFromIDs(m, gomock.Eq(tt.args.ids), tt.users, err)
 
 			actual, err := service.getUsernamesFromUserIDs(tt.args.ids)
 			if tt.expectedErr {
@@ -299,7 +282,7 @@ func TestService_CheckRoom(t *testing.T) {
 			if tt.expected.err {
 				err = errAny
 			}
-			mockIsRoomExist(m, gomock.Eq(roomID), tt.expected.ok, err)
+			mocks.MockIsRoomExist(m, gomock.Eq(roomID), tt.expected.ok, err)
 
 			err = service.CheckRoom(roomID)
 			if tt.expected.ok {
@@ -378,20 +361,17 @@ func TestService_SendMessage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
-			count := 1
+			times := 1
 			if tt.expected.roomExistErr {
 				err = errAny
-				count = 0
+				times = 0
 			}
-			mockIsRoomExist(m, gomock.Eq(roomID), !tt.expected.roomExistErr, err)
+			mocks.MockIsRoomExist(m, gomock.Eq(roomID), !tt.expected.roomExistErr, err)
 
 			if tt.expected.err {
 				err = errAny
 			}
-			m.EXPECT().
-				SaveMessage(gomock.Any()).
-				Return(err).
-				Times(count)
+			mocks.MockSaveMessage(m, gomock.Any(), err, times)
 
 			err = service.SendMessage(tt.args.roomID, tt.args.newMessage)
 			if tt.expected.err {
@@ -439,14 +419,14 @@ func TestService_GetMessagesLatest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockIsRoomExist(m, gomock.Eq(roomID), true, nil)
+			mocks.MockIsRoomExist(m, gomock.Eq(roomID), true, nil)
 			var err error
 			if tt.expected.err {
 				err = errAny
 			}
-			mockGetMessages(m, gomock.Eq(roomID), gomock.Any(), messages, err)
+			mocks.MockGetMessages(m, gomock.Eq(roomID), gomock.Any(), gomock.Eq(MessageLimit), messages, err)
 			if !tt.expected.err {
-				mockGetUsersFromIDs(m, gomock.Any(), users, nil)
+				mocks.MockGetUsersFromIDs(m, gomock.Any(), users, nil)
 			}
 
 			actual, err := service.GetMessagesLatest(roomID)
@@ -512,21 +492,17 @@ func TestService_GetMessagesAfterMessage(t *testing.T) {
 			if tt.expected.messageTimeErr {
 				err = errAny
 			}
-			m.EXPECT().
-				GetMessageTime(gomock.Eq(afterMessageID)).
-				Return(afterTime, err).
-				Times(1)
-
+			mocks.MockGetMessageTime(m, gomock.Eq(afterMessageID), afterTime, err)
 			if !tt.expected.messageTimeErr {
-				mockIsRoomExist(m, gomock.Eq(roomID), true, nil)
+				mocks.MockIsRoomExist(m, gomock.Eq(roomID), true, nil)
 
 				err = nil
 				if tt.expected.err {
 					err = errAny
 				}
-				mockGetMessages(m, gomock.Eq(roomID), gomock.Any(), messages, err)
+				mocks.MockGetMessages(m, gomock.Eq(roomID), gomock.Any(), gomock.Eq(MessageLimit), messages, err)
 				if !tt.expected.err {
-					mockGetUsersFromIDs(m, gomock.Any(), users, nil)
+					mocks.MockGetUsersFromIDs(m, gomock.Any(), users, nil)
 				}
 			}
 

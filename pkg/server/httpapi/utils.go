@@ -25,6 +25,9 @@ func respondJSON(w http.ResponseWriter, data interface{}, statusCode int) error 
 
 // respondJSONError responds with error message and specified HTTP status
 func respondJSONError(w http.ResponseWriter, err error, statusCode int) error {
+	if err == nil {
+		return errors.New("can't respond with nil err")
+	}
 	return respondJSON(w,
 		struct {
 			Error string `json:"error"`
