@@ -15,7 +15,9 @@ func MockIsRoomExist(m *MockRepository, roomID gomock.Matcher, ok bool, err erro
 		Times(1)
 }
 
-func MockGetMessages(m *MockRepository, roomID, afterTime, messageLimit gomock.Matcher, messages []message.Message, err error) {
+func MockGetMessages(m *MockRepository,
+	roomID, afterTime,
+	messageLimit gomock.Matcher, messages []message.Message, err error) {
 	m.EXPECT().
 		GetMessages(roomID, afterTime, messageLimit).
 		Return(messages, err).
