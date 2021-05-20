@@ -62,7 +62,7 @@ func getMessagesData(afterTime time.Time) (users []user.User, ids []uuid.UUID,
 func TestService_GetMessagesAfterTime(t *testing.T) {
 	setup(t)
 
-	afterTime := time.Now()
+	afterTime := time.Unix(1621521072, 0)
 	users, _, usernames, messages := getMessagesData(afterTime)
 
 	t.Run("ok", func(t *testing.T) {
@@ -381,7 +381,7 @@ func TestService_SendMessage(t *testing.T) {
 func TestService_GetMessagesLatest(t *testing.T) {
 	setup(t)
 
-	afterTime := time.Now()
+	afterTime := time.Unix(1621521072, 0)
 	users, _, usernames, messages := getMessagesData(afterTime)
 
 	type expected struct {
@@ -436,7 +436,7 @@ func TestService_GetMessagesLatest(t *testing.T) {
 func TestService_GetMessagesAfterMessage(t *testing.T) {
 	setup(t)
 
-	afterTime := time.Now()
+	afterTime := time.Unix(1621521072, 0)
 	afterMessageID := uuid.New()
 	users, _, usernames, messages := getMessagesData(afterTime)
 
