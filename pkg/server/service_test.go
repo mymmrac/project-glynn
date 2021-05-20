@@ -11,20 +11,28 @@ import (
 	"github.com/mymmrac/project-glynn/pkg/data/message"
 	"github.com/mymmrac/project-glynn/pkg/data/user"
 	"github.com/mymmrac/project-glynn/pkg/uuid"
-	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 )
 
 var errAny = errors.New("any error")
 
-func getMessagesData(afterTime time.Time) (
-	roomID uuid.UUID,
-	users []user.User,
-	ids []uuid.UUID,
-	usernames map[uuid.UUID]string,
-	messages []message.Message) {
-	roomID = uuid.New()
+var (
+	m       *mocks.MockRepository
+	service *Service
+	roomID  uuid.UUID
+)
 
+func setup(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	m = mocks.NewMockRepository(ctrl)
+	log, _ := test.NewNullLogger()
+	service = NewService(m, log)
+	roomID = uuid.New()
+}
+
+func getMessagesData(afterTime time.Time) (users []user.User, ids []uuid.UUID,
+	usernames map[uuid.UUID]string, messages []message.Message) {
 	users = make([]user.User, 3)
 	ids = make([]uuid.UUID, len(users))
 	usernames = make(map[uuid.UUID]string)
@@ -48,16 +56,14 @@ func getMessagesData(afterTime time.Time) (
 		}
 	}
 
-	return roomID, users, ids, usernames, messages
+	return users, ids, usernames, messages
 }
 
 func TestService_GetMessagesAfterTime(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	m := mocks.NewMockRepository(ctrl)
-	service := NewService(m, logrus.StandardLogger())
+	setup(t)
 
 	afterTime := time.Now()
-	roomID, users, _, usernames, messages := getMessagesData(afterTime)
+	users, _, usernames, messages := getMessagesData(afterTime)
 
 	t.Run("ok", func(t *testing.T) {
 		mocks.MockIsRoomExist(m, gomock.Eq(roomID), true, nil)
@@ -103,9 +109,7 @@ func TestService_GetMessagesAfterTime(t *testing.T) {
 }
 
 func TestService_getUserIDsFromMessages(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	m := mocks.NewMockRepository(ctrl)
-	service := NewService(m, logrus.StandardLogger())
+	setup(t)
 
 	type args struct {
 		messages []message.Message
@@ -165,9 +169,7 @@ func TestService_getUserIDsFromMessages(t *testing.T) {
 }
 
 func TestService_getUsernamesFromUserIDs(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	m := mocks.NewMockRepository(ctrl)
-	service := NewService(m, logrus.StandardLogger())
+	setup(t)
 
 	type args struct {
 		ids []uuid.UUID
@@ -241,11 +243,8 @@ func TestService_getUsernamesFromUserIDs(t *testing.T) {
 }
 
 func TestService_CheckRoom(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	m := mocks.NewMockRepository(ctrl)
-	service := NewService(m, logrus.StandardLogger())
+	setup(t)
 
-	roomID := uuid.New()
 	type expected struct {
 		ok  bool
 		err bool
@@ -295,9 +294,7 @@ func TestService_CheckRoom(t *testing.T) {
 }
 
 func TestService_SendMessage(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	m := mocks.NewMockRepository(ctrl)
-	service := NewService(m, logrus.StandardLogger())
+	setup(t)
 
 	type args struct {
 		roomID     uuid.UUID
@@ -307,8 +304,6 @@ func TestService_SendMessage(t *testing.T) {
 		roomExistErr bool
 		err          bool
 	}
-
-	roomID := uuid.New()
 
 	tests := []struct {
 		name     string
@@ -384,12 +379,10 @@ func TestService_SendMessage(t *testing.T) {
 }
 
 func TestService_GetMessagesLatest(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	m := mocks.NewMockRepository(ctrl)
-	service := NewService(m, logrus.StandardLogger())
+	setup(t)
 
 	afterTime := time.Now()
-	roomID, users, _, usernames, messages := getMessagesData(afterTime)
+	users, _, usernames, messages := getMessagesData(afterTime)
 
 	type expected struct {
 		chatMessages *ChatMessages
@@ -441,13 +434,11 @@ func TestService_GetMessagesLatest(t *testing.T) {
 }
 
 func TestService_GetMessagesAfterMessage(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	m := mocks.NewMockRepository(ctrl)
-	service := NewService(m, logrus.StandardLogger())
+	setup(t)
 
 	afterTime := time.Now()
 	afterMessageID := uuid.New()
-	roomID, users, _, usernames, messages := getMessagesData(afterTime)
+	users, _, usernames, messages := getMessagesData(afterTime)
 
 	type expected struct {
 		chatMessages   *ChatMessages
