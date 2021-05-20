@@ -20,6 +20,7 @@ import (
 	"github.com/mymmrac/project-glynn/pkg/uuid"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -90,7 +91,7 @@ func TestServer_sendMassage(t *testing.T) {
 		Text:   "test",
 	}
 	messageBytes, err := json.Marshal(newMessage)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	reqNilBody := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/api/rooms/%s/messages", roomID), nil)
 
