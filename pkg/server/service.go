@@ -51,19 +51,10 @@ func (s *Service) GetMessagesAfterTime(roomID uuid.UUID, afterTime time.Time) (*
 		return nil, fmt.Errorf("messages after time: %w", err)
 	}
 
-	if messages == nil {
-		messages = make([]message.Message, 0)
-	}
-
 	ids := s.getUserIDsFromMessages(messages)
-	users, err := s.userRepo.GetUsersFromIDs(ids)
+	usernames, err := s.getUsernamesFromUserIDs(ids)
 	if err != nil {
 		return nil, fmt.Errorf("messages after time: %w", err)
-	}
-
-	usernames := make(map[uuid.UUID]string)
-	for _, user := range users {
-		usernames[user.ID] = user.Username
 	}
 
 	return &ChatMessages{
@@ -72,7 +63,21 @@ func (s *Service) GetMessagesAfterTime(roomID uuid.UUID, afterTime time.Time) (*
 	}, nil
 }
 
-func (s Service) getUserIDsFromMessages(messages []message.Message) []uuid.UUID {
+func (s Service) getUsernamesFromUserIDs(ids []uuid.UUID) (map[uuid.UUID]string, error) {
+	users, err := s.userRepo.GetUsersFromIDs(ids)
+	if err != nil {
+		return nil, fmt.Errorf("get usernames: %w", err)
+	}
+
+	usernames := make(map[uuid.UUID]string)
+	for _, user := range users {
+		usernames[user.ID] = user.Username
+	}
+
+	return usernames, nil
+}
+
+func (s *Service) getUserIDsFromMessages(messages []message.Message) []uuid.UUID {
 	idsMap := make(map[uuid.UUID]struct{})
 	for _, msg := range messages {
 		idsMap[msg.UserID] = struct{}{}

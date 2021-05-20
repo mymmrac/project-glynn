@@ -1,6 +1,8 @@
 package room
 
-import "github.com/mymmrac/project-glynn/pkg/uuid"
+import (
+	"github.com/mymmrac/project-glynn/pkg/uuid"
+)
 
 // Room represents chat room
 type Room struct {
