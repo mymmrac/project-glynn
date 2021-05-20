@@ -52,13 +52,13 @@ func getTestData() (messages []message.Message, users []user.User, usernames map
 			ID:     uuid.New(),
 			RoomID: roomID,
 			Text:   "message 1",
-			Time:   time.Unix(1621521072, 0).Round(0),
+			Time:   time.Unix(1621521072, 0).UTC(),
 		},
 		{
 			ID:     uuid.New(),
 			RoomID: roomID,
 			Text:   "message 2",
-			Time:   time.Unix(1621521072, 0).Round(0),
+			Time:   time.Unix(1621521072, 0).UTC(),
 		},
 	}
 
@@ -198,7 +198,7 @@ func TestServer_getMessages(t *testing.T) {
 
 	t.Run("ok last message", func(t *testing.T) {
 		lastMessageID := uuid.New()
-		afterTime := time.Unix(1621521072, 0).Round(0)
+		afterTime := time.Unix(1621521072, 0).UTC()
 
 		mocks.MockGetMessageTime(m, gomock.Eq(lastMessageID), afterTime, nil)
 		mocks.MockIsRoomExist(m, gomock.Eq(roomID), true, nil)
