@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/mymmrac/project-glynn/pkg/data/chat"
 	"github.com/mymmrac/project-glynn/pkg/server"
 	"github.com/mymmrac/project-glynn/pkg/uuid"
 	"github.com/sirupsen/logrus"
@@ -14,7 +15,7 @@ import (
 
 const (
 	roomIDParameter        = "roomID"
-	lastMessageIDParameter = "lastMessageID"
+	LastMessageIDParameter = "lastMessageID"
 )
 
 type Server struct {
@@ -46,7 +47,7 @@ func (s *Server) routes() {
 	roomMessagesAPI.HandleFunc("", s.getMessages()).
 		Methods(http.MethodGet)
 	roomMessagesAPI.HandleFunc("", s.getMessages()).
-		Queries(lastMessageIDParameter, fmt.Sprintf("{%s:%s}", lastMessageIDParameter, uuid.Regex)).
+		Queries(LastMessageIDParameter, fmt.Sprintf("{%s:%s}", LastMessageIDParameter, uuid.Regex)).
 		Methods(http.MethodGet)
 	roomMessagesAPI.HandleFunc("", s.sendMassage()).
 		Methods(http.MethodPost)
@@ -70,9 +71,9 @@ func (s *Server) getMessages() http.HandlerFunc {
 			return
 		}
 
-		var messages *server.ChatMessages
+		var messages *chat.Messages
 
-		lastMessageIDStr := r.URL.Query().Get(lastMessageIDParameter)
+		lastMessageIDStr := r.URL.Query().Get(LastMessageIDParameter)
 		if lastMessageIDStr == "" {
 			messages, err = s.service.GetMessagesLatest(roomID)
 		} else {
@@ -128,7 +129,7 @@ func (s *Server) sendMassage() http.HandlerFunc {
 			return
 		}
 
-		var newMessage server.ChatNewMessage
+		var newMessage chat.NewMessage
 		err = decodeJSON(r, &newMessage)
 		if err != nil {
 			err := respondJSONError(w, err, http.StatusBadRequest)

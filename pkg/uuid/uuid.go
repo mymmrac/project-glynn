@@ -1,3 +1,4 @@
+// TODO godoc
 package uuid
 
 import "github.com/google/uuid"
