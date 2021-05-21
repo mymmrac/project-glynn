@@ -30,17 +30,20 @@ const (
 	insertMessage = "INSERT INTO messages (id, userID, roomID, text, time) VALUES (?, ?, ?, ?, ?);"
 )
 
+// Cassandra implementation of Repository
 type Cassandra struct {
 	session *gocql.Session
 	log     *logrus.Logger
 }
 
+// NewCassandraRepository creates new Cassandra Repository
 func NewCassandraRepository(log *logrus.Logger) *Cassandra {
 	return &Cassandra{
 		log: log,
 	}
 }
 
+// Connect starts new connection and initializes database if needed
 func (c *Cassandra) Connect(cassandraURL, cassandraUser, cassandraPass string, initDB bool) error {
 	cluster := gocql.NewCluster(cassandraURL)
 	cluster.Authenticator = gocql.PasswordAuthenticator{Username: cassandraUser, Password: cassandraPass}
@@ -71,6 +74,7 @@ func (c *Cassandra) Connect(cassandraURL, cassandraUser, cassandraPass string, i
 	return nil
 }
 
+// Close connection
 func (c *Cassandra) Close() {
 	if c.session != nil {
 		c.session.Close()

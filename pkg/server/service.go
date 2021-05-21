@@ -12,10 +12,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// MessageLimit limits amount of messages to be received
 const MessageLimit uint = 20
 
 var ErrorRoomNotFound = errors.New("no such room")
 
+// Service manages all logic for api
 type Service struct {
 	messageRepo repository.MessageRepository
 	userRepo    repository.UserRepository
@@ -23,6 +25,7 @@ type Service struct {
 	log         *logrus.Logger
 }
 
+// NewService creates new Service with repository.Repository
 func NewService(repo repository.Repository, log *logrus.Logger) *Service {
 	return &Service{
 		messageRepo: repo,
@@ -32,6 +35,7 @@ func NewService(repo repository.Repository, log *logrus.Logger) *Service {
 	}
 }
 
+// GetMessagesAfterTime returns chat.Messages after specified time
 func (s *Service) GetMessagesAfterTime(roomID uuid.UUID, afterTime time.Time) (*chat.Messages, error) {
 	if err := s.CheckRoom(roomID); err != nil {
 		return nil, fmt.Errorf("messages after time: %w", err)
@@ -79,6 +83,7 @@ func (s Service) getUserIDsFromMessages(messages []message.Message) []uuid.UUID 
 	return ids
 }
 
+// GetMessagesAfterMessage returns chat.Messages after specified message
 func (s *Service) GetMessagesAfterMessage(roomID, lastMessageID uuid.UUID) (*chat.Messages, error) {
 	msgTime, err := s.messageRepo.GetMessageTime(lastMessageID)
 	if err != nil {
@@ -92,6 +97,7 @@ func (s *Service) GetMessagesAfterMessage(roomID, lastMessageID uuid.UUID) (*cha
 	return cm, nil
 }
 
+// GetMessagesLatest returns latest chat.Messages
 func (s *Service) GetMessagesLatest(roomID uuid.UUID) (*chat.Messages, error) {
 	cm, err := s.GetMessagesAfterTime(roomID, time.Time{})
 	if err != nil {
@@ -100,6 +106,7 @@ func (s *Service) GetMessagesLatest(roomID uuid.UUID) (*chat.Messages, error) {
 	return cm, nil
 }
 
+// SendMessage saves message
 func (s *Service) SendMessage(roomID uuid.UUID, newMessage chat.NewMessage) error {
 	if err := s.CheckRoom(roomID); err != nil {
 		return fmt.Errorf("send message: %w", err)
@@ -121,6 +128,7 @@ func (s *Service) SendMessage(roomID uuid.UUID, newMessage chat.NewMessage) erro
 	return nil
 }
 
+// CheckRoom returns error if room not exist
 func (s *Service) CheckRoom(roomID uuid.UUID) error {
 	ok, err := s.roomRepo.IsRoomExist(roomID)
 	if err != nil {

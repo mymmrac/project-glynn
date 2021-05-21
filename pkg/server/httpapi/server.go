@@ -18,12 +18,14 @@ const (
 	LastMessageIDParameter = "lastMessageID"
 )
 
+// Server http api
 type Server struct {
 	service *server.Service
 	router  mux.Router
 	log     *logrus.Logger
 }
 
+// NewServer creates new server and initializes routes
 func NewServer(service *server.Service, log *logrus.Logger) *Server {
 	srv := &Server{
 		service: service,

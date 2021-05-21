@@ -22,12 +22,15 @@ const (
 
 const updateInterval = 1 * time.Second
 
+// Client manages connection to server
 type Client struct {
 	httpClient *http.Client
 	host       string
 	roomID     string
+	running    chan struct{}
 }
 
+// NewClient creates new client with connection to specified host
 func NewClient(host string) *Client {
 	return &Client{
 		httpClient: http.DefaultClient,
@@ -35,13 +38,20 @@ func NewClient(host string) *Client {
 	}
 }
 
+// StartChat begins to listen for new messages and reading to send message until an error occurs
 func (c *Client) StartChat(roomID string) {
 	c.roomID = roomID
+	c.running = make(chan struct{}, 1)
 	go c.readMessages()
-	c.sendMessages()
+	go c.sendMessages()
+	<-c.running
 }
 
 func (c *Client) readMessages() {
+	defer func() {
+		c.running <- struct{}{}
+	}()
+
 	var lastMessageID *uuid.UUID
 	url := fmt.Sprintf(baseURL+messagesEndpoint, c.host, c.roomID)
 
@@ -94,6 +104,10 @@ func (c *Client) readMessages() {
 }
 
 func (c *Client) sendMessages() {
+	defer func() {
+		c.running <- struct{}{}
+	}()
+
 	url := fmt.Sprintf(baseURL+messagesEndpoint, c.host, c.roomID)
 	userID, err := uuid.Parse("506a43a4-25e2-4017-bc0c-90084d784958")
 	if err != nil {
