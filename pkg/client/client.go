@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -19,11 +21,13 @@ import (
 const (
 	baseURL          = "%s/api/"
 	messagesEndpoint = "rooms/%s/messages"
+	usersEndpoint    = "users"
 )
 
 const updateInterval = 1 * time.Second
-
 const clearCurrentLine = "\u001B[F\u001B[2K"
+
+var usernameRegex = regexp.MustCompile(`^[a-zA-Z]\w{2,}$`)
 
 // Client manages connection to server
 type Client struct {
@@ -150,7 +154,7 @@ func (c *Client) sendMessages() {
 
 		resp, err := c.httpClient.Post(url, "application/json; charset=UTF-8", body)
 		if err != nil {
-			fmt.Fprintf(c.out, "Unable to mack post request.\nError: %v\n", err)
+			fmt.Fprintf(c.out, "Unable to make post request.\nError: %v\n", err)
 			return
 		}
 		if err := resp.Body.Close(); err != nil {
@@ -169,4 +173,55 @@ func (c *Client) parseText(text string) string {
 	text = strings.ToValidUTF8(text, "")
 	text = strings.TrimSpace(text)
 	return text
+}
+
+func (c *Client) CreateUser(username string) {
+	if !usernameRegex.MatchString(username) {
+		fmt.Fprint(c.out, "Invalid username, must contain only [a-Z], [0-9] or '_', "+
+			"starting from letter and at least 3 chars long.")
+		return
+	}
+
+	newUser := chat.NewUser{
+		Username: username,
+	}
+
+	byteSlice, err := json.Marshal(newUser)
+	if err != nil {
+		fmt.Fprintf(c.out, "Unable to encode user.\nError: %v\n", err)
+		return
+	}
+	body := bytes.NewReader(byteSlice)
+
+	url := fmt.Sprintf(baseURL+usersEndpoint, c.host)
+
+	resp, err := c.httpClient.Post(url, "application/json; charset=UTF-8", body)
+	if err != nil {
+		fmt.Fprintf(c.out, "Unable to make post request.\nError: %v\n", err)
+		return
+	}
+	if err := resp.Body.Close(); err != nil {
+		fmt.Fprintf(c.out, "Unable to close response body.\nError: %v\n", err)
+		return
+	}
+
+	if resp.StatusCode != http.StatusCreated {
+		fmt.Fprintf(c.out, "Something went wrong.\nStatus code: %d [%s]\n", resp.StatusCode, resp.Status)
+		return
+	}
+
+	var userIDBytes []byte
+	_, err = resp.Body.Read(userIDBytes)
+	if err != nil {
+		fmt.Fprintf(c.out, "Unable to read response body.")
+		return
+	}
+
+	err = ioutil.WriteFile("user.data", userIDBytes, 0600)
+	if err != nil {
+		fmt.Fprintf(c.out, "Unable to save user info.")
+		return
+	}
+
+	fmt.Fprintf(c.out, "User created succsefully, now you can join rooms.")
 }

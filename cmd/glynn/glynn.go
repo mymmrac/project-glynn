@@ -8,21 +8,31 @@ import (
 )
 
 var cli struct {
+	Host string `kong:"required,help='Server host'"`
+
 	Join struct {
-		Host   string `kong:"arg,required,help='Server host'"`
 		RoomID string `kong:"arg,required,help='Room ID to connect'"`
 	} `kong:"cmd,help='Connect ro room'"`
+
+	CreateUser struct {
+		Username string `kong:"arg,required,help='Username of your user'"`
+	} `kong:"cmd,help='Create new user'"`
 }
 
 func main() {
 	ctx := kong.Parse(&cli)
 
 	switch ctx.Command() {
-	case "join <host> <room-id>":
+	case "join <room-id>":
 		fmt.Println("Connecting...")
 
-		c := client.NewClient(cli.Join.Host)
+		c := client.NewClient(cli.Host)
 		c.StartChat(cli.Join.RoomID)
+	case "create-user <username>":
+		fmt.Println("Creating user...")
+
+		c := client.NewClient(cli.Host)
+		c.CreateUser(cli.CreateUser.Username)
 	default:
 		fmt.Printf("Unknown command: %q\n", ctx.Command())
 		return

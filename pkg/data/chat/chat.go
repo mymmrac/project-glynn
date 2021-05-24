@@ -16,3 +16,8 @@ type NewMessage struct {
 	UserID uuid.UUID `json:"userID"` // UserID who sent message
 	Text   string    `json:"text"`   // Text of sent message
 }
+
+// NewUser represents new user to be created
+type NewUser struct {
+	Username string `json:"username"` // Username of new user to be created
+}

@@ -21,3 +21,6 @@ bin
 
 # Cassandra data
 cassandra-data
+
+# Data files
+*.data
