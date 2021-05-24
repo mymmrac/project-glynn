@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -22,19 +23,27 @@ const (
 
 const updateInterval = 1 * time.Second
 
+const clearCurrentLine = "\u001B[F\u001B[2K"
+
 // Client manages connection to server
 type Client struct {
-	httpClient *http.Client
-	host       string
-	roomID     string
-	running    chan struct{}
+	httpClient     *http.Client
+	out            io.Writer
+	in             io.Reader
+	host           string
+	roomID         string
+	running        chan struct{}
+	updateInterval time.Duration
 }
 
 // NewClient creates new client with connection to specified host
 func NewClient(host string) *Client {
 	return &Client{
-		httpClient: http.DefaultClient,
-		host:       host,
+		httpClient:     http.DefaultClient,
+		host:           host,
+		out:            os.Stdout,
+		in:             os.Stdin,
+		updateInterval: updateInterval,
 	}
 }
 
@@ -63,7 +72,7 @@ func (c *Client) readMessages() {
 
 		resp, err := c.httpClient.Get(reqURL)
 		if err != nil {
-			fmt.Printf("Oppss...\n%v", err)
+			fmt.Fprintf(c.out, "Unable to make get request.\nError: %v\n", err)
 			return
 		}
 
@@ -71,27 +80,29 @@ func (c *Client) readMessages() {
 		case http.StatusOK:
 		//	nothing
 		case http.StatusNotFound:
-			fmt.Printf("Room with id %q not found!", c.roomID)
+			fmt.Fprintf(c.out, "Room with id %q not found.\n", c.roomID)
 			return
 		default:
-			fmt.Printf("Oppss... Status code: %d [%s]", resp.StatusCode, resp.Status)
+			fmt.Fprintf(c.out, "Something went wrong.\nStatus code: %d [%s]\n", resp.StatusCode, resp.Status)
 			return
 		}
 
 		var cm chat.Messages
 		err = json.NewDecoder(resp.Body).Decode(&cm)
 		if err != nil {
-			fmt.Printf("Oppss...\n%v", err)
+			fmt.Fprintf(c.out, "Unable to decode message.\nError: %v\n", err)
 			return
 		}
 
 		if err = resp.Body.Close(); err != nil {
-			fmt.Printf("Oppss...\n%v", err)
+			fmt.Fprintf(c.out, "Unable to close response body.\nError: %v\n", err)
 			return
 		}
 
+		// TODO move displaying to other func
 		for _, m := range cm.Messages {
-			fmt.Printf("%s [\033[33m%s\033[0m]: %s\n", m.Time.Local().Format(time.RFC822), cm.Usernames[m.UserID], m.Text)
+			fmt.Fprintf(c.out,
+				"%s [\033[33m%s\033[0m]: %s\n", m.Time.Local().Format(time.RFC822), cm.Usernames[m.UserID], m.Text)
 		}
 
 		l := len(cm.Messages)
@@ -99,7 +110,7 @@ func (c *Client) readMessages() {
 			lastMessageID = &cm.Messages[l-1].ID
 		}
 
-		time.Sleep(updateInterval)
+		time.Sleep(c.updateInterval)
 	}
 }
 
@@ -114,13 +125,14 @@ func (c *Client) sendMessages() {
 		return
 	}
 
-	scanner := bufio.NewScanner(os.Stdin)
+	scanner := bufio.NewScanner(c.in)
 	for scanner.Scan() {
 		text := scanner.Text()
-		fmt.Print("\u001B[F\u001B[2K")
+		fmt.Fprint(c.out, clearCurrentLine)
 
 		text = c.parseText(text)
 		if text == "" {
+			fmt.Fprintln(c.out, "Empty or non UTF-8 text can't be sent.")
 			continue
 		}
 
@@ -131,30 +143,30 @@ func (c *Client) sendMessages() {
 
 		byteSlice, err := json.Marshal(newMessage)
 		if err != nil {
-			fmt.Printf("Oppss...\n%v", err)
+			fmt.Fprintf(c.out, "Unable to encode message.\nError: %v\n", err)
 			return
 		}
 		body := bytes.NewReader(byteSlice)
 
 		resp, err := c.httpClient.Post(url, "application/json; charset=UTF-8", body)
 		if err != nil {
-			fmt.Printf("Oppss...\n%v", err)
+			fmt.Fprintf(c.out, "Unable to mack post request.\nError: %v\n", err)
 			return
 		}
 		if err := resp.Body.Close(); err != nil {
-			fmt.Printf("Oppss...\n%v", err)
+			fmt.Fprintf(c.out, "Unable to close response body.\nError: %v\n", err)
 			return
 		}
 
 		if resp.StatusCode != http.StatusCreated {
-			fmt.Printf("Oppss... Status code: %d [%s]", resp.StatusCode, resp.Status)
+			fmt.Fprintf(c.out, "Something went wrong.\nStatus code: %d [%s]\n", resp.StatusCode, resp.Status)
 			return
 		}
 	}
 }
 
 func (c *Client) parseText(text string) string {
-	text = strings.TrimSpace(text)
 	text = strings.ToValidUTF8(text, "")
+	text = strings.TrimSpace(text)
 	return text
 }
