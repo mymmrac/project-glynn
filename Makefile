@@ -3,3 +3,9 @@ lint-install:
 
 lint:
 	$(shell go env GOPATH)/bin/golangci-lint run
+
+build-client:
+	go build -o bin/glynn cmd/glynn/glynn.go
+
+build-server:
+	go build -o bin/glynn-server cmd/glynn-server/glynn-server.go
