@@ -124,7 +124,7 @@ func TestClient_readMessages(t *testing.T) {
 		"20 May 21 17:31 EEST [\u001B[33mtest\u001B[0m]: test\n" +
 			"Something went wrong.\n" +
 			"Status code: 400 [400 Bad Request]\n")
-	assert.Equal(t, expectedOutBuf, &outBuf)
+	assert.Equal(t, expectedOutBuf, &outBuf, fmt.Sprintf("expected: %q\n actual: %q", expectedOutBuf.String(), outBuf.String()))
 }
 
 func TestClient_sendMessages(t *testing.T) {
