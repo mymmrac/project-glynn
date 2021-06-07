@@ -17,8 +17,6 @@ func TestRegex(t *testing.T) {
 		{name: "match", uuidStr: "6d9e6c88-3c82-427e-98b7-7a425e60dfbf", expected: true},
 		{name: "match", uuidStr: "9eee574e-2f80-4a07-bb61-238bbcabc239", expected: true},
 		{name: "match", uuidStr: "49f6715b-6696-428f-b63a-acf9830bfebb", expected: true},
-		{name: "match", uuidStr: "49f6715A-6696-428f-B63A-acf9830bfebb", expected: true},
-		{name: "match", uuidStr: "F4CDE117-A830-4CF5-A9A5-5C7CF2D9038F", expected: true},
 
 		{name: "not match", uuidStr: "49f6715b-6696-428f-v63a-acf9830bfebb", expected: false},
 		{name: "not match", uuidStr: "49z6715b-6696-428f-v63a-acf9830bfebb", expected: false},

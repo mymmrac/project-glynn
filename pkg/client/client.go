@@ -124,7 +124,7 @@ func (c *Client) sendMessages() {
 	}()
 
 	url := fmt.Sprintf(baseURL+messagesEndpoint, c.host, c.roomID)
-	userID, err := uuid.Parse("506a43a4-25e2-4017-bc0c-90084d784958")
+	userID, err := uuid.Parse("8b50748a-94ec-4ea4-9405-00e659bf62d4")
 	if err != nil {
 		return
 	}

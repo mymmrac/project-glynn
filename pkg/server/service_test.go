@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"github.com/mymmrac/project-glynn/pkg/data/chat"
 	"strconv"
 	"testing"
 	"time"
@@ -73,7 +74,7 @@ func TestService_GetMessagesAfterTime(t *testing.T) {
 		actual, err := service.GetMessagesAfterTime(roomID, afterTime)
 		assert.NoError(t, err)
 		assert.Equal(t,
-			&ChatMessages{
+			&chat.Messages{
 				Messages:  messages,
 				Usernames: usernames,
 			},
@@ -298,7 +299,7 @@ func TestService_SendMessage(t *testing.T) {
 
 	type args struct {
 		roomID     uuid.UUID
-		newMessage ChatNewMessage
+		newMessage chat.NewMessage
 	}
 	type expected struct {
 		roomExistErr bool
@@ -314,7 +315,7 @@ func TestService_SendMessage(t *testing.T) {
 			name: "ok",
 			args: args{
 				roomID: roomID,
-				newMessage: ChatNewMessage{
+				newMessage: chat.NewMessage{
 					UserID: uuid.New(),
 					Text:   "Test",
 				},
@@ -328,7 +329,7 @@ func TestService_SendMessage(t *testing.T) {
 			name: "err room",
 			args: args{
 				roomID: roomID,
-				newMessage: ChatNewMessage{
+				newMessage: chat.NewMessage{
 					UserID: uuid.New(),
 					Text:   "Test",
 				},
@@ -342,7 +343,7 @@ func TestService_SendMessage(t *testing.T) {
 			name: "err",
 			args: args{
 				roomID: roomID,
-				newMessage: ChatNewMessage{
+				newMessage: chat.NewMessage{
 					UserID: uuid.New(),
 					Text:   "Test",
 				},
@@ -385,7 +386,7 @@ func TestService_GetMessagesLatest(t *testing.T) {
 	users, _, usernames, messages := getMessagesData(afterTime)
 
 	type expected struct {
-		chatMessages *ChatMessages
+		chatMessages *chat.Messages
 		err          bool
 	}
 	tests := []struct {
@@ -395,7 +396,7 @@ func TestService_GetMessagesLatest(t *testing.T) {
 		{
 			name: "ok",
 			expected: expected{
-				chatMessages: &ChatMessages{
+				chatMessages: &chat.Messages{
 					Messages:  messages,
 					Usernames: usernames,
 				},
@@ -441,7 +442,7 @@ func TestService_GetMessagesAfterMessage(t *testing.T) {
 	users, _, usernames, messages := getMessagesData(afterTime)
 
 	type expected struct {
-		chatMessages   *ChatMessages
+		chatMessages   *chat.Messages
 		messageTimeErr bool
 		err            bool
 	}
@@ -452,7 +453,7 @@ func TestService_GetMessagesAfterMessage(t *testing.T) {
 		{
 			name: "ok",
 			expected: expected{
-				chatMessages: &ChatMessages{
+				chatMessages: &chat.Messages{
 					Messages:  messages,
 					Usernames: usernames,
 				},

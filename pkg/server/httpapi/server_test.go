@@ -14,6 +14,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/mymmrac/project-glynn/internal/mocks"
+	"github.com/mymmrac/project-glynn/pkg/data/chat"
 	"github.com/mymmrac/project-glynn/pkg/data/message"
 	"github.com/mymmrac/project-glynn/pkg/data/user"
 	"github.com/mymmrac/project-glynn/pkg/server"
@@ -86,7 +87,7 @@ func getTestData() (messages []message.Message, users []user.User, usernames map
 func TestServer_sendMassage(t *testing.T) {
 	setup(t)
 
-	newMessage := server.ChatNewMessage{
+	newMessage := chat.NewMessage{
 		UserID: uuid.New(),
 		Text:   "test",
 	}
@@ -167,11 +168,11 @@ func TestServer_getMessages(t *testing.T) {
 	req = mux.SetURLVars(req, vars)
 
 	messages, users, usernames := getTestData()
-	expected := &server.ChatMessages{
+	expected := &chat.Messages{
 		Messages:  messages,
 		Usernames: usernames,
 	}
-	var actual *server.ChatMessages
+	var actual *chat.Messages
 
 	withBadRequest := func(r *http.Request) {
 		rr := httptest.NewRecorder()
@@ -206,7 +207,7 @@ func TestServer_getMessages(t *testing.T) {
 		mocks.MockGetUsersFromIDs(m, gomock.Any(), users, nil)
 
 		reqLastMessage := httptest.NewRequest(http.MethodGet,
-			fmt.Sprintf("/api/rooms/%s/messages?%s=%s", roomID, lastMessageIDParameter, lastMessageID),
+			fmt.Sprintf("/api/rooms/%s/messages?%s=%s", roomID, LastMessageIDParameter, lastMessageID),
 			nil)
 		reqLastMessage = mux.SetURLVars(reqLastMessage, vars)
 
@@ -223,7 +224,7 @@ func TestServer_getMessages(t *testing.T) {
 
 	t.Run("bad last message id", func(t *testing.T) {
 		reqLastMessage := httptest.NewRequest(http.MethodGet,
-			fmt.Sprintf("/api/rooms/%s/messages?%s=%s", roomID, lastMessageIDParameter, "bad_id"),
+			fmt.Sprintf("/api/rooms/%s/messages?%s=%s", roomID, LastMessageIDParameter, "bad_id"),
 			nil)
 		reqLastMessage = mux.SetURLVars(reqLastMessage, vars)
 
@@ -293,7 +294,7 @@ func TestServer_routes(t *testing.T) {
 			name: "get messages with last id",
 			args: args{
 				method: http.MethodGet,
-				url:    fmt.Sprintf("/api/rooms/%s/messages?%s=%s", roomID, lastMessageIDParameter, uuid.New()),
+				url:    fmt.Sprintf("/api/rooms/%s/messages?%s=%s", roomID, LastMessageIDParameter, uuid.New()),
 			},
 			expected: expected{
 				handler: srv.getMessages(),

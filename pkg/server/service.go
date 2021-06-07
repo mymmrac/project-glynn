@@ -52,11 +52,6 @@ func (s *Service) GetMessagesAfterTime(roomID uuid.UUID, afterTime time.Time) (*
 		return nil, fmt.Errorf("messages after time: %w", err)
 	}
 
-	usernames := make(map[uuid.UUID]string)
-	for _, user := range users {
-		usernames[user.ID] = user.Username
-	}
-
 	return &chat.Messages{
 		Messages:  messages,
 		Usernames: usernames,
