@@ -61,13 +61,14 @@ For simplicity as "chat room" will be used just "room".
 
 * [ ] Configs:
   * [ ] 🕒 Read configs
-  * [ ] Parse CLI args
-* [ ] Types:
-  * [ ] Service
+  * [X] Parse CLI args
+* [X] Types:
+  * [X] Client
+  * [X] Chat related
 * [ ] Service (HTTP):
   * [ ] User creation
-  * [ ] Read messages
-  * [ ] Format massages
+  * [X] Read messages
+  * [X] Format massages
   * [ ] Create room
   * [ ] Delete room
   * [ ] Server info
