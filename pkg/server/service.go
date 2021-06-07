@@ -5,26 +5,19 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mymmrac/project-glynn/pkg/data/chat"
 	"github.com/mymmrac/project-glynn/pkg/data/message"
 	"github.com/mymmrac/project-glynn/pkg/repository"
 	"github.com/mymmrac/project-glynn/pkg/uuid"
 	"github.com/sirupsen/logrus"
 )
 
+// MessageLimit limits amount of messages to be received
 const MessageLimit uint = 20
 
 var ErrorRoomNotFound = errors.New("no such room")
 
-type ChatMessages struct {
-	Messages  []message.Message    `json:"messages"`
-	Usernames map[uuid.UUID]string `json:"usernames"`
-}
-
-type ChatNewMessage struct {
-	UserID uuid.UUID `json:"userID"`
-	Text   string    `json:"text"`
-}
-
+// Service manages all logic for api
 type Service struct {
 	messageRepo repository.MessageRepository
 	userRepo    repository.UserRepository
@@ -32,6 +25,7 @@ type Service struct {
 	log         *logrus.Logger
 }
 
+// NewService creates new Service with repository.Repository
 func NewService(repo repository.Repository, log *logrus.Logger) *Service {
 	return &Service{
 		messageRepo: repo,
@@ -41,7 +35,8 @@ func NewService(repo repository.Repository, log *logrus.Logger) *Service {
 	}
 }
 
-func (s *Service) GetMessagesAfterTime(roomID uuid.UUID, afterTime time.Time) (*ChatMessages, error) {
+// GetMessagesAfterTime returns chat.Messages after specified time
+func (s *Service) GetMessagesAfterTime(roomID uuid.UUID, afterTime time.Time) (*chat.Messages, error) {
 	if err := s.CheckRoom(roomID); err != nil {
 		return nil, fmt.Errorf("messages after time: %w", err)
 	}
@@ -51,14 +46,22 @@ func (s *Service) GetMessagesAfterTime(roomID uuid.UUID, afterTime time.Time) (*
 		return nil, fmt.Errorf("messages after time: %w", err)
 	}
 
-	if messages == nil {
-		messages = make([]message.Message, 0)
-	}
-
 	ids := s.getUserIDsFromMessages(messages)
-	users, err := s.userRepo.GetUsersFromIDs(ids)
+	usernames, err := s.getUsernamesFromUserIDs(ids)
 	if err != nil {
 		return nil, fmt.Errorf("messages after time: %w", err)
+	}
+
+	return &chat.Messages{
+		Messages:  messages,
+		Usernames: usernames,
+	}, nil
+}
+
+func (s Service) getUsernamesFromUserIDs(ids []uuid.UUID) (map[uuid.UUID]string, error) {
+	users, err := s.userRepo.GetUsersFromIDs(ids)
+	if err != nil {
+		return nil, fmt.Errorf("get usernames: %w", err)
 	}
 
 	usernames := make(map[uuid.UUID]string)
@@ -66,13 +69,10 @@ func (s *Service) GetMessagesAfterTime(roomID uuid.UUID, afterTime time.Time) (*
 		usernames[user.ID] = user.Username
 	}
 
-	return &ChatMessages{
-		Messages:  messages,
-		Usernames: usernames,
-	}, nil
+	return usernames, nil
 }
 
-func (s Service) getUserIDsFromMessages(messages []message.Message) []uuid.UUID {
+func (s *Service) getUserIDsFromMessages(messages []message.Message) []uuid.UUID {
 	idsMap := make(map[uuid.UUID]struct{})
 	for _, msg := range messages {
 		idsMap[msg.UserID] = struct{}{}
@@ -88,7 +88,8 @@ func (s Service) getUserIDsFromMessages(messages []message.Message) []uuid.UUID 
 	return ids
 }
 
-func (s *Service) GetMessagesAfterMessage(roomID, lastMessageID uuid.UUID) (*ChatMessages, error) {
+// GetMessagesAfterMessage returns chat.Messages after specified message
+func (s *Service) GetMessagesAfterMessage(roomID, lastMessageID uuid.UUID) (*chat.Messages, error) {
 	msgTime, err := s.messageRepo.GetMessageTime(lastMessageID)
 	if err != nil {
 		return nil, fmt.Errorf("messages after message: %w", err)
@@ -101,7 +102,8 @@ func (s *Service) GetMessagesAfterMessage(roomID, lastMessageID uuid.UUID) (*Cha
 	return cm, nil
 }
 
-func (s *Service) GetMessagesLatest(roomID uuid.UUID) (*ChatMessages, error) {
+// GetMessagesLatest returns latest chat.Messages
+func (s *Service) GetMessagesLatest(roomID uuid.UUID) (*chat.Messages, error) {
 	cm, err := s.GetMessagesAfterTime(roomID, time.Time{})
 	if err != nil {
 		return nil, fmt.Errorf("latest messages: %w", err)
@@ -109,7 +111,8 @@ func (s *Service) GetMessagesLatest(roomID uuid.UUID) (*ChatMessages, error) {
 	return cm, nil
 }
 
-func (s *Service) SendMessage(roomID uuid.UUID, newMessage ChatNewMessage) error {
+// SendMessage saves message
+func (s *Service) SendMessage(roomID uuid.UUID, newMessage chat.NewMessage) error {
 	if err := s.CheckRoom(roomID); err != nil {
 		return fmt.Errorf("send message: %w", err)
 	}
@@ -130,6 +133,7 @@ func (s *Service) SendMessage(roomID uuid.UUID, newMessage ChatNewMessage) error
 	return nil
 }
 
+// CheckRoom returns error if room not exist
 func (s *Service) CheckRoom(roomID uuid.UUID) error {
 	ok, err := s.roomRepo.IsRoomExist(roomID)
 	if err != nil {
