@@ -121,7 +121,7 @@ func TestClient_readMessages(t *testing.T) {
 	assert.Equal(t, 2, runTimes)
 
 	expectedOutBuf := bytes.NewBufferString(
-		"20 May 21 17:31 EEST [\u001B[33mtest\u001B[0m]: test\n" +
+		messageTime.Local().Format(time.RFC822) + " [\u001B[33mtest\u001B[0m]: test\n" +
 			"Something went wrong.\n" +
 			"Status code: 400 [400 Bad Request]\n")
 	assert.Equal(t, expectedOutBuf, &outBuf,
