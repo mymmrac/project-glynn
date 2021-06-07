@@ -6,6 +6,7 @@ require (
 	github.com/alecthomas/kong v0.2.16
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/gocql/gocql v0.0.0-20210515062232-b7ef815b4556
+	github.com/golang/mock v1.5.0
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0

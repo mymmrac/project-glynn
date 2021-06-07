@@ -2,13 +2,13 @@ package repository
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/gocql/gocql"
 	"github.com/mymmrac/project-glynn/pkg/data/message"
 	"github.com/mymmrac/project-glynn/pkg/data/user"
 	"github.com/mymmrac/project-glynn/pkg/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 const (
